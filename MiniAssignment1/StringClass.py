@@ -1,16 +1,16 @@
 class StringClass:
-    in_string = ""
+    __input_str = ""
+    __char_list = []
 
     def __init__(self):
-        self.in_string = input("Enter the String: ")
+        self.__input_str = input("Enter the String:")
 
     def get_length(self):
-        return len(self.in_string)
+        return len(self.__input_str)
 
-    def convert_to_list(self):
-        return list(self.in_string)
+    @staticmethod
+    def convert_into_list_char(input_str):
+        return list(input_str)
 
-
-# stringClass = StringClass()
-# print(stringClass.get_length())
-# print(stringClass.convert_to_list())
+    def get_str(self):
+        return self.__input_str
