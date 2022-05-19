@@ -48,7 +48,30 @@ def merge_list_to_dict(keys, value):
     print(res_dict)
 
 
+def merge_dict(dict1, dict2):
+    dict1.update(dict2)
+    print(dict1)
+
+
+def update_key_in_dict(sample_dict, old_key, new_key):
+    print("Initial dictionary:", sample_dict)
+    sample_dict[new_key] = sample_dict.pop(old_key)
+    print("Updated dictionary:", sample_dict)
+
+
+def convert_dict_to_list(dict_org):
+    res_list = []
+    for keys, value in dict_org.items():
+        keys_list = [keys]
+        keys_list += value
+        res_list.append(keys_list)
+    print(res_list)
+
+
 duplicate_elements()
 merge_lists()
 nested_list_prob(["a", "b", ["c", ["d", "e", ["f", "g"], "k"], "l"], "m", "n"], ["h", "i", "j"])
 merge_list_to_dict(["Ten", "Twenty", "Thirty"], [10, 20, 30])
+merge_dict({'Ten': 10, 'Twenty': 20, 'Thirty': 30}, {'Thirty': 30, 'Fourty': 40, 'Fifty': 50})
+update_key_in_dict({"name": "Kelly", "age": 25, "salary": 8000, "city": "New york"}, "city", "location")
+convert_dict_to_list({"HuEx": [1, 3, 4], "is": [7, 6], "best": [4, 5]})
