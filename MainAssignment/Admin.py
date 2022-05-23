@@ -77,6 +77,7 @@ class Admin:
                 sleep(3)
                 flag = False
 
+
     def get_hr_and_min(self, given_time):
         given_time = given_time.split(" ")
         cal_hr, cal_min = int(re.findall(r'\d+', given_time[0])[0]), int(re.findall(r'\d+', given_time[1])[0])
