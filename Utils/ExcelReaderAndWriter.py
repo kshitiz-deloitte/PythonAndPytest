@@ -1,7 +1,4 @@
-import openpyxl
 import xlwings as xw
-# Give the location of the file
-from xlwings.constants import DeleteShiftDirection
 
 from Utils.readCfg import get_from_config
 
@@ -12,15 +9,16 @@ class ExcelHelper:
 
     def __init__(self, sheet_name):
         self.app = xw.App(add_book=False)
-        self.wb = self.app.books.open(get_from_config("excel_file", "file_path"))
-        self.my_sheet_obj = self.wb.sheets[sheet_name]
+        self.work_book = self.app.books.open(get_from_config("excel_file", "file_path"))
+        self.my_sheet_obj = self.work_book.sheets[sheet_name]
 
     def get_row_column(self):
-        return self.my_sheet_obj.range('A' + str(self.my_sheet_obj.cells.last_cell.row)).end('up').row, self.my_sheet_obj.range('A1').end('right').column
+        return self.my_sheet_obj.range('A' + str(self.my_sheet_obj.cells.last_cell.row)).end(
+            'up').row, self.my_sheet_obj.range('A1').end('right').column
 
     def get_headers_from_exl(self):
         row, col = self.get_row_column()
-        self.__headers = self.my_sheet_obj.range(f"{chr(self.ASCII_VALUE+1)}1:{chr(self.ASCII_VALUE+col)}1").value
+        self.__headers = self.my_sheet_obj.range(f"{chr(self.ASCII_VALUE + 1)}1:{chr(self.ASCII_VALUE + col)}1").value
         return self.__headers
 
     def get_headers(self):
@@ -29,25 +27,24 @@ class ExcelHelper:
     def get_data_from_exl(self):
         row, col = self.get_row_column()
         for i in range(1, row):
-            yield self.my_sheet_obj.range(f"{chr(self.ASCII_VALUE + 1)}{i+1}:{chr(self.ASCII_VALUE + col)}{i+1}").value
+            yield self.my_sheet_obj.range(
+                f"{chr(self.ASCII_VALUE + 1)}{i + 1}:{chr(self.ASCII_VALUE + col)}{i + 1}").value
 
         # print(name)
         # row, col = self.get_row_column()
         # for i in range(1, row):
-        #     yield self.my_sheet_obj.range(f"{chr(self.ASCII_VALUE + 1)}{i+1}:{chr(self.ASCII_VALUE + col)}{i+1}").value
-
+        # yield self.my_sheet_obj.range(f"{chr(self.ASCII_VALUE + 1)}{i+1}:{chr(self.ASCII_VALUE + col)}{i+1}").value
 
     def insert_data_into_excel(self, input_data):
         row, col = self.get_row_column()
-        print(col)
         count = 1
         for data in input_data:
-            self.my_sheet_obj.range(f"{chr(self.ASCII_VALUE + count)}{row+1}").value = data
+            self.my_sheet_obj.range(f"{chr(self.ASCII_VALUE + count)}{row + 1}").value = data
             count += 1
 
         try:
-            self.wb.save()
-            self.wb.save(get_from_config("excel_file", "file_path"))
+            self.work_book.save()
+            self.work_book.save(get_from_config("excel_file", "file_path"))
         except Exception as e:
             print(e)
 
@@ -57,19 +54,18 @@ class ExcelHelper:
         flag = False
         for movie in self.my_sheet_obj.range('A2:A{}'.format(row)):
             if movie_to_delete == movie.value:
-                print(movie.get_address(0, 0))
+                print("Checking If I am here")
                 delete_movie_row = int(movie.get_address(0, 0)[1:])
-                self.my_sheet_obj.range('2:{}'.format(delete_movie_row)).api.Delete()
+                self.my_sheet_obj.range(f"{delete_movie_row}:{delete_movie_row}").api.Delete()
                 break
         if delete_movie_row != 0:
             flag = True
             try:
-                self.wb.save()
-                self.wb.save(get_from_config("excel_file", "file_path"))
+                self.work_book.save()
+                self.work_book.save(get_from_config("excel_file", "file_path"))
             except Exception as e:
                 print(e)
         return flag
-
 
     def edit_movie_from_excel(self, movie_to_edit, field_to_edit, updated_value):
         row, col = self.get_row_column()
@@ -81,11 +77,10 @@ class ExcelHelper:
                 for header in self.__headers:
                     if header == field_to_edit:
                         edit_movie_col = int(self.__headers.index(field_to_edit))
-        print(f"{chr(self.ASCII_VALUE + edit_movie_col + 1)}{edit_movie_row + 1}")
         self.my_sheet_obj.range(f"{chr(self.ASCII_VALUE + edit_movie_col + 1)}{edit_movie_row}").value = updated_value
         try:
-            self.wb.save()
-            self.wb.save(get_from_config("excel_file", "file_path"))
+            self.work_book.save()
+            self.work_book.save(get_from_config("excel_file", "file_path"))
         except Exception as e:
             print(e)
 
@@ -101,12 +96,12 @@ class ExcelHelper:
         return flag
 
     def close_app(self):
+        try:
+            self.work_book.save()
+            self.work_book.save(get_from_config("excel_file", "file_path"))
+        except Exception as e:
+            print(e)
         self.app.quit()
-
-
-
-
-
 
 # movies_data = ExcelHelper(get_from_config("excel_file", "movies_sheet"))
 # # # movies_data.get_headers_from_exl()

@@ -1,8 +1,10 @@
 import re
 from time import sleep
 
+from Exceptions.UserDefinedException import MovieError
 from Utils.ExcelReaderAndWriter import ExcelHelper
 from Utils.readCfg import get_from_config
+from Utils.Validator import input_validator
 
 
 class Admin:
@@ -14,8 +16,6 @@ class Admin:
     def __init__(self):
         self.movies_dict = {}
         self.movies_header = []
-        self.movies_data = ExcelHelper(get_from_config(self.__EXL_SECTION, "movies_sheet"))
-        self.movies_header = self.movies_data.get_headers_from_exl()
         print("******Welcome to BookMyShow Admin*******")
         print(get_from_config(self.__SECTION, "admin_login_options"))
         ch = int(input(get_from_config(self.__COM_SECTION, "enter_option")))
@@ -34,6 +34,67 @@ class Admin:
             self.admin_heading = f"******Welcome {admin_name}*******"
             self.admin_page()
 
+    def add_new_movie(self):
+        movies_data = ExcelHelper(get_from_config(self.__EXL_SECTION, "movies_sheet"))
+        movies_header = movies_data.get_headers_from_exl()
+        print("******Add movie******")
+        for header in movies_header:
+            if header == "Timings":
+                timing_str = ""
+                for elem in self.cal_movie_timing():
+                    timing_str = " ".join([timing_str, str(elem)])
+                self.movies_dict[header] = timing_str.lstrip()
+                continue
+            self.movies_dict[header] = input(header + ": ")
+            try:
+                input_validator(header, self.movies_dict[header])
+            except MovieError as movie_error:
+                print(movie_error.get_message())
+                movies_data.close_app()
+                return
+        try:
+            movies_data.insert_data_into_excel(list(self.movies_dict.values()))
+            print("Movie added successfully")
+        except Exception as e:
+            print(e)
+            print("Error occurred while inserting movie details in Excel")
+        finally:
+            movies_data.close_app()
+
+    def edit_movie(self):
+        movies_data = ExcelHelper(get_from_config(self.__EXL_SECTION, "movies_sheet"))
+        print("Edit movie details")
+        count = 1
+        movie_list = list(movies_data.get_data_from_exl())
+        for movie in movie_list:
+            print(f"{count}. {movie[0]}")
+            count += 1
+        movie_to_edit = movie_list[int(input("Enter the movie title to edit: ")) - 1][0]
+        field_to_edit = input("Enter the field to edit: ")
+        updated_value = input("Enter value to update: ")
+        movies_data.edit_movie_from_excel(movie_to_edit, field_to_edit, updated_value)
+        movies_data.close_app()
+
+    def del_movie(self):
+        movies_data = ExcelHelper(get_from_config(self.__EXL_SECTION, "movies_sheet"))
+        movie_list = list(movies_data.get_data_from_exl())
+        count = 0
+        for movie in movie_list:
+            print(f"{count}. {movie[0]}")
+            count += 1
+        movie_to_delete = input("Enter the movie title to delete: ")
+        if movies_data.del_movie_from_excel(movie_to_delete):
+            print("Movie deleted successfully")
+        else:
+            print("Movie doesn't exist")
+        movies_data.close_app()
+
+    def log_out(self):
+        movies_data = ExcelHelper(get_from_config(self.__EXL_SECTION, "movies_sheet"))
+        print("Logging out...")
+        movies_data.close_app()
+        sleep(3)
+
     def admin_page(self):
         flag = True
         while flag:
@@ -41,48 +102,26 @@ class Admin:
             print(get_from_config(self.__SECTION, "admin_options"))
             ch = int(input(get_from_config(self.__COM_SECTION, "enter_option")))
             if ch == 1:
-                print("******Add movie******")
-                for header in self.movies_header:
-                    if header == "Timings":
-                        timing_str = ""
-                        for elem in self.cal_movie_timing():
-                            timing_str = " ".join([timing_str, str(elem)])
-                        self.movies_dict[header] = timing_str.lstrip()
-
-                        continue
-                    self.movies_dict[header] = input(header + ": ")
-                print(self.movies_dict)
-                self.movies_data.insert_data_into_excel(list(self.movies_dict.values()))
+                self.add_new_movie()
 
             elif ch == 2:
-                print("Edit movie details")
-                count = 1
-                movie_list = list(self.movies_data.get_data_from_exl())
-                for movie in movie_list:
-                    print(f"{count}. {movie[0]}")
-                    count += 1
-                movie_to_edit = movie_list[int(input("Enter the movie title to edit: "))-1][0]
-                field_to_edit = input("Enter the field to edit: ")
-                updated_value = input("Enter value to update: ")
-                self.movies_data.edit_movie_from_excel(movie_to_edit, field_to_edit, updated_value)
-            elif ch == 3:
-                movie_to_delete = input("Enter the movie title to delete: ")
-                if self.movies_data.del_movie_from_excel(movie_to_delete):
-                    print("Movie deleted successfully")
-                else:
-                    print("Movie doesn't exist")
-            elif ch == 4:
-                print("Logging out...")
-                self.movies_data.close_app()
-                sleep(3)
-                flag = False
+                self.edit_movie()
 
+            elif ch == 3:
+                self.del_movie()
+
+            elif ch == 4:
+                self.log_out()
+                flag = False
 
     def get_hr_and_min(self, given_time):
         given_time = given_time.split(" ")
-        cal_hr, cal_min = int(re.findall(r'\d+', given_time[0])[0]), int(re.findall(r'\d+', given_time[1])[0])
-
-        return cal_hr, cal_min
+        try:
+            cal_hr, cal_min = int(re.findall(r'\d+', given_time[0])[0]), int(re.findall(r'\d+', given_time[1])[0])
+            return cal_hr, cal_min
+        except:
+            cal_min = int(re.findall(r'\d+', given_time[0])[0])
+            return 0, cal_min
 
     def cal_movie_timing(self):
         movie_length_hr, movie_length_min = self.get_hr_and_min(self.movies_dict["Length"])

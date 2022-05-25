@@ -1,6 +1,6 @@
 from time import sleep
 
-from Exceptions.UserDefinedException import FormulaError
+from Exceptions.UserDefinedException import LoginError
 from MainAssignment.Movies import Movies
 from Utils.ExcelReaderAndWriter import ExcelHelper
 from Utils.readCfg import get_from_config
@@ -43,8 +43,8 @@ class User:
                 print("next")
                 Movies(user_name_log)
             else:
-                raise FormulaError("Login not successful")
-        except FormulaError as e:
+                raise LoginError("Login not successful")
+        except LoginError as e:
             print(e.message)
 
     def user_register(self):

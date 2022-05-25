@@ -1,6 +1,6 @@
 from time import sleep
 
-from Exceptions.UserDefinedException import FormulaError
+from Exceptions.UserDefinedException import LoginError
 from Utils.ExcelReaderAndWriter import ExcelHelper
 from Utils.readCfg import get_from_config
 
@@ -52,18 +52,18 @@ class Movies:
                 try:
                     num_of_seats = int(input("Enter Number of seats: "))
                     if num_of_seats > int(movie_dict["Capacity"]):
-                        raise FormulaError("Not enough seats")
+                        raise LoginError("Not enough seats")
                     self.num_booked_tickets = num_of_seats
                     print("Thanks for booking.")
-                except FormulaError as e:
+                except LoginError as e:
                     print(e.message)
             elif ch == 2:
                 try:
                     cancel_num = int(input("Number of seats you want to cancel: "))
                     if cancel_num > self.num_booked_tickets:
-                        raise FormulaError("Not enough seats")
+                        raise LoginError("Not enough seats")
                     self.num_booked_tickets = self.num_booked_tickets - cancel_num
-                except FormulaError as e:
+                except LoginError as e:
                     print(e.message)
 
             elif ch == 3:
